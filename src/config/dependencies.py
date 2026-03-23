@@ -61,7 +61,6 @@ async def get_authenticated_user(
         UserModel,
         user_id,
         options=[
-            joinedload(UserModel.group),
-            joinedload(UserModel.collection)
+            joinedload(UserModel.group)
         ],
     )
