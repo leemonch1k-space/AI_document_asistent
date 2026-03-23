@@ -13,9 +13,9 @@ from src.schemas.document import (
     DocumentListResponseSchema,
 )
 from src.schemas.assistant import (
-    AssistantResponseSchema,
-    AssistantRequestSchema,
-    SourcesSchema,
+    AskRequestSchema,
+    SourceSchema,
+    AskResponseSchema,
 )
 
 __all__ = [
@@ -29,7 +29,7 @@ __all__ = [
     "DocumentResponseSchema",
     "DocumentItemSchema",
     "DocumentListResponseSchema",
-    "AssistantResponseSchema",
-    "AssistantRequestSchema",
-    "SourcesSchema",
+    "AskRequestSchema",
+    "SourceSchema",
+    "AskResponseSchema",
 ]

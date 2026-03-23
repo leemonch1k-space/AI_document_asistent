@@ -33,6 +33,8 @@ class BaseAppSettings(BaseSettings):
     QDRANT_HOST: str = "placeholder_qHost"
     QDRANT_PORT: int = 0
 
+    MISTRAL_API_KEY: str = "placeholder_mistral_key"
+
     @property
     def DATABASE_URL(self) -> str:
         return "placeholder_algorithm"
@@ -70,11 +72,13 @@ class Settings(BaseAppSettings):
     POSTGRES_DB_PORT: int = int(os.getenv("POSTGRES_DB_PORT", 5432))
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "auction_db")
 
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "redis_db")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
+
     QDRANT_HOST: str = os.getenv("QDRANT_HOST", "qdrant_db")
     QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", 6333))
 
-    REDIS_HOST: str = os.getenv("REDIS_HOST", "redis_db")
-    REDIS_PORT: int = int(os.getenv("REDIS_PORT", 6379))
+    MISTRAL_API_KEY: str = os.getenv("MISTRAL_API_KEY", "mistral_key")
 
     SECRET_KEY_ACCESS: str = Field(
         default_factory=lambda: os.getenv(
