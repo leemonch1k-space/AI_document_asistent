@@ -16,9 +16,10 @@ from src.exceptions.user import (
 from src.exceptions.document import (
     BaseDocumentException,
     UnSupportedFormatError,
+    DocumentNotFoundError,
 )
 from src.exceptions.assistant import (
-    BaseAgentException
+    BaseAgentException,
 )
 
 __all__ = [
@@ -35,5 +36,6 @@ __all__ = [
     "BaseUserException",
     "BaseDocumentException",
     "UnSupportedFormatError",
+    "DocumentNotFoundError",
     "BaseAgentException",
 ]
