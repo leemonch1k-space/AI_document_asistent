@@ -1,0 +1,65 @@
+services:
+  postgres_db:
+    image: postgres:16
+    container_name: postgres_db
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis_db:
+    image: redis:7
+    container_name: redis_db
+    ports:
+      - "6379:6379"
+
+  qdrant_db:
+    image: qdrant/qdrant:latest
+    container_name: qdrant_container
+    ports:
+      - "${QDRANT_PORT}:${QDRANT_PORT}"
+      - "${QDRANT_GRPC_PORT}:${QDRANT_GRPC_PORT}"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  web:
+    build: .
+    container_name: api_ai_document_asistent
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+      redis_db:
+        condition: service_started
+    command: >
+      sh -c "alembic upgrade head && 
+             uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+  celery:
+    build: .
+    container_name: celery_worker
+    env_file: .env
+    depends_on:
+      - redis_db
+      - postgres_db
+    volumes:
+      - .:/app
+    command: celery -A src.config.celery_app worker --loglevel=info
+
+volumes:
+  qdrant_data:
+  postgres_data:
