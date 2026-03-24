@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
@@ -24,6 +25,8 @@ async def generate_answer(
         is_admin: bool
 ) -> AskResponseSchema:
     """Service to search documents and generate AI answer."""
+    logging.info(f"Answer generation for user '{user_id}' running...")
+
     embeddings_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     qdrant_client = QdrantClient(url=settings.QDRANT_URL)
 
@@ -60,7 +63,6 @@ async def generate_answer(
 
     llm = ChatMistralAI(api_key=settings.MISTRAL_API_KEY)
 
-
     prompt = ChatPromptTemplate.from_messages([
         ("system", (
             "You are a helpful AI assistant. Answer the user's question based ONLY on the provided context.\n"
@@ -83,7 +85,7 @@ async def generate_answer(
                 chunk_id=str(doc.metadata.get("chunk_id", ""))
             )
         )
-
+    logging.info(f"Answer for user '{user_id}' is ready!")
     return AskResponseSchema(
         answer=response["answer"],
         sources=sources
@@ -96,6 +98,7 @@ async def generate_summary(
         is_admin: bool
 ) -> AskSummaryResponseSchema:
     """Service to search documents and generate AI summary."""
+    logging.info(f"Preparing summary for document '{document_id}'...")
     qdrant_client = QdrantClient(url=settings.QDRANT_URL)
 
     must_conditions = [
@@ -134,6 +137,7 @@ async def generate_summary(
             break
 
     if not all_chunks:
+        logging.error("Summary preparation failed")
         raise DocumentNotFoundError("Document not found or access denied")
 
     llm = ChatMistralAI(api_key=settings.MISTRAL_API_KEY)
@@ -146,6 +150,8 @@ async def generate_summary(
 
     summary_chain = create_stuff_documents_chain(llm, prompt)
     summary_text = await summary_chain.ainvoke({"context": all_chunks})
+
+    logging.info(f"Answer for document '{document_id}' is ready!")
 
     return AskSummaryResponseSchema(
         document_id=document_id,

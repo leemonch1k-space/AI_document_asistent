@@ -1,3 +1,5 @@
+import logging
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,7 +16,7 @@ async def send_question(
         question_data: AskRequestSchema
 ) -> AskResponseSchema:
     """Crud for validating access and sending question to assistant."""
-
+    logging.info(f"Sending user '{authenticated_user_data.id}' question to assistant")
     is_admin = authenticated_user_data.group.name == UserGroupEnum.ADMIN
     document_ids = question_data.document_ids
     question = question_data.question
@@ -39,6 +41,7 @@ async def send_question(
     valid_doc_ids = result.scalars().all()
 
     if len(valid_doc_ids) != len(document_ids):
+        logging.error(f"User '{authenticated_user_data.id}' question request rejected.")
         raise DocumentNotFoundError("One or more documents not found or access denied")
 
     return await generate_answer(
@@ -54,6 +57,7 @@ async def send_summary_request(
         request_data: AskSummaryRequestSchema
 ) -> AskSummaryResponseSchema:
     """Crud for ask assistant to make summary of the document."""
+    logging.info(f"Sending user '{authenticated_user_data.id}' summarization request to assistant")
     document_id = request_data.document_id
     is_admin = authenticated_user_data.group.name == UserGroupEnum.ADMIN
 
@@ -69,6 +73,7 @@ async def send_summary_request(
     document = result.scalar_one_or_none()
 
     if document is None:
+        logging.error(f"User '{authenticated_user_data.id}' summarization request rejected.")
         raise DocumentNotFoundError("Document not found or access denied")
 
     return await generate_summary(

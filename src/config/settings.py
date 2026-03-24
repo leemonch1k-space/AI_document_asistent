@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -115,3 +116,5 @@ def get_settings() -> BaseAppSettings:
     if environment == "docker":
         return Settings()
     return DevSettings()
+
+logging.info("Settings loaded")

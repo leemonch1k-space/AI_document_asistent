@@ -9,7 +9,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader, PyPDFLoader, UnstructuredMarkdownLoader
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
-from celery.utils.log import get_task_logger
+from celery.utils.log import get_task_logging
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qdrant_models
 
@@ -20,10 +20,6 @@ from src.enums import DocumentStatusEnum
 from src.exceptions import UnSupportedFormatError
 
 settings = get_settings()
-
-logger = get_task_logger(__name__)
-logging.basicConfig(filename='services.log', level=logging.DEBUG, filemode='a',
-                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 LOADERS = {
     "txt": lambda path: TextLoader(path, encoding="utf-8"),
@@ -39,13 +35,14 @@ async def prepare_document(
         user_id: int,
         db: AsyncSession
 ) -> None:
-    logger.info(f"Starting to process document {document_id} at {file_location}")
+    """Service for preparing and sending document data to Qdrant."""
+    logging.info(f"Starting to process document {document_id} at {file_location}")
 
     try:
         loader_factory = LOADERS.get(file_format)
 
         if loader_factory is None:
-            logger.error(f"Document process stopped - unsupported format: {file_format}")
+            logging.error(f"Document process stopped - unsupported format: {file_format}")
             raise UnSupportedFormatError("File format unsupported!")
 
         loader = loader_factory(file_location)
@@ -60,7 +57,7 @@ async def prepare_document(
 
         chunks = text_splitter.split_documents(documents)
         chunks_count = len(chunks)
-        logger.info(f"Document split into {chunks_count} chunks.")
+        logging.info(f"Document split into {chunks_count} chunks.")
 
         for i, chunk in enumerate(chunks):
             chunk.metadata["chunk_id"] = i
@@ -77,9 +74,9 @@ async def prepare_document(
             url=settings.QDRANT_URL,
             collection_name="knowledge_base",
         )
-        logger.info(f"{chunks_count} chunks saved in Qdrant.")
+        logging.info(f"{chunks_count} chunks saved in Qdrant.")
 
-        logger.info("Updating document status to PROCESSED...")
+        logging.info("Updating document status to PROCESSED...")
         stmt = (
             update(DocumentModel)
             .where(DocumentModel.id == UUID(document_id))
@@ -91,18 +88,18 @@ async def prepare_document(
         await db.execute(stmt)
         await db.commit()
 
-        logger.info(f"Document {document_id} successfully prepared!")
+        logging.info(f"Document {document_id} successfully prepared!")
 
-        logger.info("Moving file to processed directory...")
+        logging.info("Moving file to processed directory...")
 
         raw_path = Path(file_location)
         processed_path = PROCESSED_STORAGE_DIR / raw_path.name
         shutil.move(str(raw_path), str(processed_path))
 
-        logger.info(f"File successfully moved to {processed_path}")
+        logging.info(f"File successfully moved to {processed_path}")
 
     except Exception as e:
-        logger.error(f"Error processing document {document_id}: {str(e)}")
+        logging.error(f"Error processing document {document_id}: {str(e)}")
         stmt = (
             update(DocumentModel)
             .where(DocumentModel.id == UUID(document_id))
@@ -114,12 +111,14 @@ async def prepare_document(
         raw_path = Path(file_location)
         failed_path = FAILED_STORAGE_DIR / raw_path.name
         shutil.move(raw_path, str(failed_path))
-        logger.info(f"File successfully moved to {failed_path}")
+        logging.info(f"File successfully moved to {failed_path}")
 
 
 async def delete_document_embedding(
         file_id: UUID
 ) -> None:
+    """Service for deleting vectors from Qdrant"""
+    logging.info(f"Starting to deleting document '{file_id}' vectors from Qdrant")
     try:
         qdrant_client = QdrantClient(url=settings.QDRANT_URL)
         qdrant_client.delete(
@@ -140,6 +139,8 @@ async def delete_document_embedding(
 async def delete_document_file(
         file_name: str
 ) -> None:
+    """Service for deleting files."""
+    logging.info(f"Starting to deleting document '{file_name}'")
     for directory in [PROCESSED_STORAGE_DIR, RAW_STORAGE_DIR, FAILED_STORAGE_DIR]:
         file_path = directory / file_name
         if file_path.exists():

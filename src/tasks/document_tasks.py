@@ -1,9 +1,15 @@
 import asyncio
+
+from celery.utils.log import get_task_logger
+
 from src.config.celery_app import celery_instance
 from src.database.celery_session import task_db_session
 from src.services import prepare_document
 
 # Celery task for documents
+
+
+logger = get_task_logger(__name__)
 
 
 async def _run_document_preparation(
@@ -30,6 +36,7 @@ def prepare_document_task(
         user_id: int
 ) -> None:
     """Prepare document."""
+    logger.info(f"TASK 'prepare document' started on document {document_id}")
     asyncio.run(_run_document_preparation(
         document_id=document_id,
         file_location=file_location,

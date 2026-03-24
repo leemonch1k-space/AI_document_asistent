@@ -13,6 +13,7 @@ settings = get_settings()
 
 
 async def check_database_connection():
+    """Supporting script for database health checking."""
     logger.info("Waiting for database to become ready...")
 
     engine = create_async_engine(settings.DATABASE_URL)

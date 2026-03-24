@@ -20,19 +20,17 @@ from src.services import delete_document_embedding, delete_document_file
 from src.tasks.document_tasks import prepare_document_task
 
 
-logging.basicConfig(filename='crud.log', level=logging.DEBUG, filemode='a',
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
-
 async def upload_file(
     authenticated_user_data: UserModel,
     db: Annotated[AsyncSession, Depends(get_db)],
     file: UploadFile
 ) -> DocumentResponseSchema:
     """Crud for uploading new document."""
+    logging.info(f"{file.filename} uploading...")
     allowed_expansion = {"txt", "pdf", "md"}
     file_format = file.filename.split(".")[-1]
     if not (file_format in allowed_expansion):
+        logging.error(f"{file.filename} uploading failed! Unsupported format.")
         raise UnSupportedFormatError("File format unsupported!")
 
     new_doc = DocumentModel(
@@ -49,6 +47,7 @@ async def upload_file(
         await db.commit()
         await db.refresh(new_doc)
     except IntegrityError:
+        logging.error(f"{file.filename} uploading failed! Database error.")
         await db.rollback()
         raise
 
@@ -90,6 +89,7 @@ async def delete_file(
         file_id: UUID
 ) -> None:
     """Crud for deleting document and its resources."""
+    logging.info(f"file '{file_id}' removing started...")
     try:
         if authenticated_user_data.group.name == UserGroupEnum.ADMIN:
             query = select(DocumentModel).where(DocumentModel.id == file_id)
@@ -111,7 +111,9 @@ async def delete_file(
         await db.commit()
 
     except NoResultFound:
+        logging.error(f"file '{file_id}' removing failed! File not found.")
         raise DocumentNotFoundError("Document not found or access denied")
     except IntegrityError:
+        logging.error(f"file '{file_id}' removing failed! Database error.")
         await db.rollback()
         raise
