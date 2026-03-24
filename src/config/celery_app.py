@@ -10,12 +10,12 @@ from src.config.settings import get_settings
 settings = get_settings()
 
 celery_instance = Celery(
-    "auction_worker",
+    "assistant_worker",
     broker=f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0",
     backend=f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0",
     include=[
-        "src.tasks.auction_tasks",
         "src.tasks.token_tasks",
+        "src.tasks.document_tasks",
     ],
 )
 

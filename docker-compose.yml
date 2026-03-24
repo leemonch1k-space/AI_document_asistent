@@ -45,8 +45,11 @@ services:
         condition: service_healthy
       redis_db:
         condition: service_started
+      qdrant_db:
+        condition: service_started
     command: >
-      sh -c "alembic upgrade head && 
+      sh -c "python -m src.database.wait_for_db &&
+             alembic upgrade head && 
              uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
   celery:
