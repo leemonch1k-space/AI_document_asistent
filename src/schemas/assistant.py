@@ -15,3 +15,11 @@ class SourceSchema(BaseModel):
 class AskResponseSchema(BaseModel):
     answer: str
     sources: list[SourceSchema]
+
+
+class AskSummaryRequestSchema(BaseModel):
+    document_id: UUID
+
+
+class AskSummaryResponseSchema(AskSummaryRequestSchema):
+    summary: str

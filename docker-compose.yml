@@ -41,12 +41,9 @@ services:
     volumes:
       - .:/app
     depends_on:
-      postgres_db:
-        condition: service_healthy
-      redis_db:
-        condition: service_started
-      qdrant_db:
-        condition: service_started
+      - postgres_db
+      - redis_db
+      - qdrant_db
     command: >
       sh -c "python -m src.database.wait_for_db &&
              alembic upgrade head && 

@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from uuid import UUID
 
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_qdrant import QdrantVectorStore
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader, PyPDFLoader, UnstructuredMarkdownLoader
@@ -62,7 +62,8 @@ async def prepare_document(
         chunks_count = len(chunks)
         logger.info(f"Document split into {chunks_count} chunks.")
 
-        for chunk in chunks:
+        for i, chunk in enumerate(chunks):
+            chunk.metadata["chunk_id"] = i
             chunk.metadata["document_id"] = str(document_id)
             chunk.metadata["user_id"] = user_id
 

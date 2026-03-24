@@ -1,6 +1,6 @@
 from src.crud.user import login_user, create_new_user, refresh_token
 from src.crud.document import upload_file, get_files, delete_file
-from src.crud.assistant import send_question
+from src.crud.assistant import send_question, send_summary_request
 
 __all__ = [
     "login_user",
@@ -10,4 +10,5 @@ __all__ = [
     "get_files",
     "delete_file",
     "send_question",
+    "send_summary_request",
 ]

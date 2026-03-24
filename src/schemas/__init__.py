@@ -16,6 +16,8 @@ from src.schemas.assistant import (
     AskRequestSchema,
     SourceSchema,
     AskResponseSchema,
+    AskSummaryRequestSchema,
+    AskSummaryResponseSchema,
 )
 
 __all__ = [
@@ -32,4 +34,6 @@ __all__ = [
     "AskRequestSchema",
     "SourceSchema",
     "AskResponseSchema",
+    "AskSummaryRequestSchema",
+    "AskSummaryResponseSchema",
 ]

@@ -1,7 +1,6 @@
 import asyncio
 from src.config.celery_app import celery_instance
 from src.database.celery_session import task_db_session
-from src.database.models import RefreshTokenModel
 from src.services import prepare_document
 
 # Celery task for documents
